@@ -3,6 +3,7 @@ import sys
 import os
 import operator
 import argparse
+import math
 from data_interface import *
 
 MIN_OVERLAP = 100
@@ -56,46 +57,50 @@ def pairwiseAlign(samples1, samples2):
             print count
             count+=1
     for key in scores.keys():
-        scores[key] /= len(samples1)*len(samples2)
+        scores[key] /= (len(samples1)*len(samples2))
 
     return scores
 
 def getClass(index, classIndices):
     for c in range(len(classIndices)-1):
-        if index > classIndices[c] and index < classIndices[c+1]:
+        if index >= classIndices[c] and index < classIndices[c+1]:
             return c
 
 def evaluate(averageScores, args, sizes):
     (componentsSize, constituentsSize) = sizes
     (expectedIndex, indicesSize) = getExpected(args)
     minAlignment = -constituentsSize + 1
-    maxAlignment = componentsSize - 1
+    maxAlignment = componentsSize
     increment = float(maxAlignment-minAlignment)/float(indicesSize)
     classScores = [0] * indicesSize
     classIndices = [minAlignment + increment*i for i in range(indicesSize+1)]
-    bestClassIndices = [increment*i for i in range(indicesSize)]
-    output = open("%s-%s.align" % (args.const, args.comp))
+    #bestClassIndices = [increment*i for i in range(indicesSize)]
+    output = open("%s-%s.align" % (args.const, args.comp), 'w')
     print >>output, "Component: %s" % args.const
     print >>output, "Constituent: %s" % args.comp
     print >>output, "Expected Index: %d" % expectedIndex
     print >>output, "Number of Indices: %d" % indicesSize
-    print >>output, "Best Index: %d" % max(averageScores.iteritems(), key=operator.itemgetter(1))[0]
-    print >>output, "Best Index Score %d" % max(averageScores.values())
+    print >>output, "Best Index: %d" % max(averageScores.keys(), key=lambda x:averageScores[x])
+    #print >>output, "Best Index: %d" % max(averageScores.iteritems(), key=operator.itemgetter(1))[0]
+    print >>output, "Best Index Score %f" % max(averageScores.values())
     for key in averageScores.keys():
         section = getClass(key, classIndices)
         classScores[section] += averageScores[key]
-    for i in range(classIndices-1):
-        classScores[0] /= classIndices[i+1] - classIndices[i]
+    for i in range(len(classIndices)-1):
+        classScores[i] /= (classIndices[i+1] - classIndices[i])
+    for c in range(len(classScores)):
+        print >>output, "Class score %d: %f" % (c, classScores[c])
+    print >>output, "Relative advantage: %f" % (math.exp(classScores[expectedIndex]) / sum(map(lambda x: math.exp(x), classScores)))
     print >>output, ""
     for key in averageScores.keys():
-        print >>output, "%d: %d" % (key, averageScores[key])
+        print >>output, "%d: %f" % (key, averageScores[key])
 
 def main():
     args = parseArgs()
     (composites, constituents) = getSamples(args)
     sizes = (composites[0].shape[1], constituents[0].shape[1])
     averageScores = pairwiseAlign(composites, constituents)
-    evaluate(averageScores, args, size)
+    evaluate(averageScores, args, sizes)
 
 if __name__ == "__main__":
     main()
