@@ -1,8 +1,9 @@
 import scipy as sp
 import numpy as np
 import os
+import math
 
-timings = {'ha_START' = ??, 'ha_END' = ??, 'bit_START' = ??, 'bit_END' = ??, 'habit_START' = ??, 'habit_END' = ??, 'OVERLAP' = 100}
+timings = {'HA_START' = ??, 'HA_END' = ??, 'BIT_START' = ??, 'BIT_END' = ??, 'HABIT_START' = ??, 'HABIT_END' = ??, 'OVERLAP' = 100}
 
 HA_PATH = '../data/syllables/ha/'
 BIT_PATH = '../data/syllables/bit/'
@@ -17,8 +18,20 @@ def matFileTo2dMatrix(sample):
 	return sp.io.loadmat(sample)['structData']
 
 def truncate(sample, left, right):
+	return sample[left:right]
 
-def meanFeatureExtractor(sample):
+def meanFeatureExtractor(sample, num_parts):
+	num_channels = getNumberChannels(sample)
+	num_readings = getNumberReadings(sample)
+
+	parts_size = math.floor(num_readings/num_parts)
+	parts_array = zeros(num_channels, num_parts);
+
+	for i in xrange(numParts):
+		parts_array(:, i) = np.mean(sample(:, i * parts_size : (i + 1) * parts_size), axis=1)
+
+	return reshape(parts_array, (1, num_parts * num_channels))
+
 
 # Do not change size of sample. No pooling.
 def convNetActivation(sample):
@@ -28,30 +41,24 @@ def removeChannel(sample, channel):
 def discreteWaveletTransform(sample):
 
 def getNumberChannels(sample):
+	return sample.shape[0]
 
 def getNumberReadings(sample):
-
-def removeOverlap(sample):
+	return sample.shape[1]
 
 def getClassSamples(className, preprocessfn = None):
-	# array = whatever
-	# if preprocessfn:
-	# 	return map(lambda x: preprocessfn(x), array)
-	# else:
-	# 	return array
-	# return preprocessed array of npmatrices of all class samples
-	# return array of npmatrices of all class samples
 	all_samples = []
+	
+	CLASSPATH = eval(className.upper() + '_PATH')
+
 	# Getting all MAT files
 	# Neglecting the first file (.DS_Store)
-	CLASSPATH = eval(className + 'PATH')
-
 	all_MAT_files = os.listdir(CLASSPATH)[1:]
 	for MAT_file in all_MAT_files:
 		sample_path = CLASSPATH + MAT_file
 		sample_matrix = matFileTo2dMatrix(sample_path)
 		if preprocessfn:
-			sample_matrix = preprocessfn(sample_matrix)
+			sample_matrix = preprocessfn(sample_matrix, className)
 		all_samples.append(sample_matrix)
 
 	return np.array(all_samples)
