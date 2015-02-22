@@ -37,7 +37,7 @@ def meanFeatureExtractor(sample, num_parts):
 def convNetActivation(sample):
 
 def removeChannel(sample, channel):
-	return numpy.delete(sample, (channel), axis=0)
+	return np.delete(sample, (channel), axis=0)
 
 def discreteWaveletTransform(sample):
 
