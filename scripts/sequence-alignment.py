@@ -1,6 +1,7 @@
 import scipy
 import sys
 import os
+import operator
 import argparse
 from data-interface import *
 
@@ -55,30 +56,42 @@ def pairwiseAlign(samples1, samples2):
 
     return scores
 
-def analyze(averageScores, args)
+def getClass(index, classIndices):
+    for c in range(len(classIndices)-1):
+        if index > classIndices[c] and index < classIndices[c+1]:
+            return c
+
+def evaluate(averageScores, args, sizes)
+    (componentsSize, constituentsSize) = sizes
     (expectedIndex, indicesSize) = getExpected(args)
-    minAlignment =
-    maxAlignment =
-
+    minAlignment = -constituentsSize + 1
+    maxAlignment = componentsSize - 1
     increment = float(maxAlignment-minAlignment)/float(indicesSize)
-    segments = [minAlignment + increment*i for i in range(indicesSize+1)]
-    bestClassIndices =
-
-    output = open("%s-%s.align" % (args.const, args.comp)
+    classScores = [0] * indicesSize
+    classIndices = [minAlignment + increment*i for i in range(indicesSize+1)]
+    bestClassIndices = [increment*i for i in range(indicesSize)]
+    output = open("%s-%s.align" % (args.const, args.comp))
     print >>output, "Component: %s" % args.const
     print >>output, "Constituent: %s" % args.comp
     print >>output, "Expected Index: %d" % expectedIndex
     print >>output, "Number of Indices: %d" % indicesSize
-    print >>output, ""
+    print >>output, "Best Index: %d" % max(averageScores.iteritems(), key=operator.itemgetter(1))[0]
+    print >>output, "Best Index Score %d" % max(averageScores.values())
     for key in averageScores.keys():
-        print >>output, "%d: %d" % averageScores[key]
-
+        section = getClass(key, classIndices)
+        classScores[section] += averageScores[key]
+    for i in range(classIndices-1):
+        classScores[0] /= classIndices[i+1] - classIndices[i]
+    print >>output, ""
+    for key in averageScores.keys()
+        print >>output, "%d: %d" % (key, averageScores[key])
 
 def main():
     args = parseArgs()
     (composites, constituents) = getSamples(args)
+    sizes = (composites[0].shape[1], constituents[0].shape[1])
     averageScores = pairwiseAlign(composites, constituents)
-    evaluate(averageScores, args)
+    evaluate(averageScores, args, size)
 
 if __name__ == "__main__":
     main()
