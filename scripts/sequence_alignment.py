@@ -2,7 +2,7 @@ import scipy
 import sys
 import os
 import argparse
-from data-interface import *
+from data_interface import *
 
 MIN_OVERLAP = 100
 
@@ -10,8 +10,8 @@ def euclideanScore(sample1, sample2):
     assert sample1.shape[1] == sample2.shape[1]
     return np.sum(np.linalg.norm(sample1 - sample2, axis=1))
 
-INCLUDE OVERLAPPING
-def oneStrideAlignment(sample1, sample2, scores, scorefn)
+#INCLUDE OVERLAPPING
+def oneStrideAlignment(sample1, sample2, scores, scorefn):
     sample1Size = sample1.shape[1]
     sample2Size = sample2.shape[1]
     for i in range(-sample2Size+1, sample1Size):
