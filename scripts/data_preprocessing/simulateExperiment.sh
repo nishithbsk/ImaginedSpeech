@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sox -d recording.wav
+
 for i in {1..10}
 do
 	index=$RANDOM
