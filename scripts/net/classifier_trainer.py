@@ -161,9 +161,7 @@ class ClassifierTrainer(object):
 
         y_pred_val = np.hstack(y_pred_val)
         numI = X_val.shape[0] / 100
-        #print y_pred_val.shape, y_val[:numI * 100].shape
         val_acc = np.mean(y_pred_val ==  y_val[:numI * 100])
-        #print val_acc
         val_acc_history.append(val_acc)
         
         # keep track of the best model based on validation accuracy

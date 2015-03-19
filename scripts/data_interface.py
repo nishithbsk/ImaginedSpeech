@@ -6,12 +6,12 @@ import math
 
 timings = {'HA_START':400, 'HA_END':2000, 'BIT_START':400, 'BIT_END':2000, 'HABIT_START':400, 'HABIT_END':2300, 'OVERLAP':100}
 
-HA_PATH = '../data/syllables/ha/'
-BIT_PATH = '../data/syllables/bit/'
-HABIT_PATH = '../data/syllables/habit/'
-SIG_PATH = '../data/syllables/sig/'
-NAL_PATH = '../data/syllables/nal/'
-SIGNAL_PATH = '../data/syllables/signal/'
+HA_PATH = '../data_mat/ha/'
+BIT_PATH = '../data_mat/bit/'
+HABIT_PATH = '../data_mat/habit/'
+SIG_PATH = '../data_mat/sig/'
+NAL_PATH = '../data_mat/nal/'
+SIGNAL_PATH = '../data_mat/signal/'
 
 # Input: string of file name
 # Return: 2d array with row a channel and column as reading

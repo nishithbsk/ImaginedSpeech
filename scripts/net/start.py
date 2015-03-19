@@ -1,15 +1,7 @@
-from run import *
 from classifiers.convnet import *
 
 init_convnet = init_three_layer_convnet
 convnet = three_layer_convnet
-
-# init_convnet = init_conv_convnet
-# convnet = conv_convnet
-
-numToPiece = {0: 'Piece', 1: 'P', 2: 'R', 3: 'N', 4: 'B', 5: 'Q', 6: 'K'}
-
-netsToTrain = [0]
 
 for net in netsToTrain:
 	models = initModels(init_convnet)
