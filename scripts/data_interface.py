@@ -57,7 +57,7 @@ def getClassSamples(className, preprocessfn = None):
 
     # Getting all MAT files
     # Neglecting the first file (.DS_Store)
-    all_MAT_files = os.listdir(CLASSPATH)[1:10]
+    all_MAT_files = os.listdir(CLASSPATH)[1:20]
     for MAT_file in all_MAT_files:
         sample_path = CLASSPATH + MAT_file
         sample_matrix = matFileTo2dMatrix(sample_path)
