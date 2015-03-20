@@ -1,23 +1,22 @@
 class MultiLevelConvNet():
 
-	def __init__(self, X_train, X_val, numLevels, component_dim = (1, 67, 100)):
+	def __init__(self, X_train, X_val, numLevels):
 		self.numLevels = numLevels
 		self.X_train = X_train
 		self.X_val = X_val
-		self.component_dim = component_dim
 		self.levels = {{}}
 		self.trainer = ClassifierTrainer()
 
-	def set_level_parameters(n, fn, model, y_train, y_val, input_dim, numPreviousComponents, stride):
+	def set_level_parameters(self, n, fn, model, y_train, y_val, input_dim, numComponents, stride):
 		self.levels[n]['fn'] = fn
 		self.levels[n]['model'] = model
 		self.levels[n]['y_train'] = y_train
 		self.levels[n]['y_val'] = y_val
 		self.levels[n]['input_dim'] = input_dim
 		self.levels[n]['stride'] = stride
-		if n != 0: self.levels[n]['numPreviousComponents'] = numPreviousComponents
+		self.levels[n]['numComponents'] = numComponents
 
-	def set_level_learning_parameters(n, reg = 0.0000, learning_rate = 0.0015, batch_size = 250, num_epochs = 5, 
+	def set_level_learning_parameters(self, n, reg = 0.0000, learning_rate = 0.0015, batch_size = 250, num_epochs = 5, 
 										learning_rate_decay = 0.999, update = 'rmsprop', verbose=True, dropout=1.0):
 		self.levels[n]['reg'] = reg
 		self.levels[n]['learning_rate'] = learning_rate
@@ -29,18 +28,36 @@ class MultiLevelConvNet():
 		self.levels[n]['dropout'] = dropout
 
 	def check_level_continuity():
-		return NotImplementedError()
+		self.predict_level(self.numLevels-1, X_train = self.X_train)
 
-	def process_to_level(n, X):
-		for i in range(n-1)
-			
+		return True
 
-		if n == 0:
-			return X
-		A = self.levels[n-1]['fn'](process_to_level(n-1), extract_features = True)
+	def forward_level(self, n, X):
+		component_dims = self.levels[n]['input_dim']
+		stride = self.levels[n]['stride']
+		numComponents = self.levels[n]['numComponents']
+		current = 0
+		nextLevel = []
+
+		while (current + component_dims[2] + stride*(numComponents-1)):
+			components = []
+			for i in range(numComponents):
+				component = X[:, :component_dims[0], :component_dims[1], current : current + component_dims[2]]
+				components.append(component)
+				current += stride
+			A = self.levels[n]['fn'](reduce(lambda x, y: np.hstack(x, y), components), extract_features = True)
+			nextLevel.append(A)
+
+		return reduce(lambda x, y: np.hstack(x, y), components)
 
 
-	def predict_level(n, X_train=False, X_val = False, X=None):
+	def process_to_level(self, n, X):
+		for i in range(n-1):
+			A = self.forward_level(i, X)
+		return A
+
+
+	def predict_level(self, n, X_train=False, X_val = False, X=None):
 		if X_train:
 			X = X_train
 		elif X_val:
@@ -48,16 +65,15 @@ class MultiLevelConvNet():
 		else:
 			X = X
 
-		for i in range(n-1):
-			X = forward_level(i, X)
+		X = self.process_to_level(n, X)
 
 		return self.levels[n]['fn'](X, return_probs = True)
 
-	def train_level(n):
+	def train_level(self, n):
 		X_train, X_val = self.X_train, self.X_val
 
-		X_train = process_to_level(n, self.X_train)
-		X_val = process_to_level(n, self.X_val)
+		X_train = self.process_to_level(n, self.X_train)
+		X_val = self.process_to_level(n, self.X_val)
 
 		y_train, y_val = self.levels[n]['y_train'], self.levels[n]['y_val']
 		model, fn = self.levels[n]['model'], self.levels['fn']
@@ -68,13 +84,6 @@ class MultiLevelConvNet():
 
 		best_model = results[0]
 		self.levels[n]['model'] = best_model
-
-	def split(X, num):
-		size = X.shape[3] / num
-		return np.array([X[:, :, :, i : i + size] for i in range(num)]), size
-
-	def adjoin(features, num):
-		return np.reshape(features, (features[0]/num, features[1], features[2], features[3]*num))
 
 
 
