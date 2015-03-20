@@ -8,8 +8,24 @@ from util import *
 from classifiers.convnet import *
 from MultiLevelConvNet import MultiLevelConvNet
 
-X_train = 
-X_val = 
+# sig, nal, signal
+
+# NOTES: Trim sig and nal
+
+X_sig = get_all_instances_of_symbol('SIG')
+y_sig_1 = np.tile(np.arange(10), (X_sig.shape[0], 1))
+y_sig_2 = np.tile(np.arange(2), (X_sig.shape[0], 1))
+y_sig_3 = np.tile(0, (X_sig.shape[0], 1))
+
+X_nal = get_all_instances_of_symbol('NAL')
+y_nal_1 = np.tile(np.arange(10, 20), (X_nal.shape[0], 1))
+y_nal_2 = np.tile(np.arange(2, 4), (X_nal.shape[0], 1))
+y_nal_3 = np.tile(1, (X_nal.shape[0], 1))
+
+X_signal = get_all_instances_of_symbol('SIGNAL')
+y_signal_1 = np.tile(np.arange(20), (X_signal.shape[0], 1))
+y_signal_2 = np.tile(np.arange(4), (X_signal.shape[0], 1))
+y_signal_3 = np.tile(np.arange(2), (X_signal.shape[0], 1))
 
 component_dim = (1, 64, 112)
 
