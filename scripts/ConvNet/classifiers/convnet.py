@@ -780,7 +780,7 @@ def init_speech_convnet(input_shape=(6, 8, 8), num_classes=64,
 
   return model
 
-def speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = False):
+def speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = False, return_probs = False):
   """
   Compute the loss and gradient for a simple three layer ConvNet that uses
   the following architecture:
@@ -827,7 +827,12 @@ def speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = F
     scores, cache4 = affine_forward(d2, W3, b3)
 
   if y is None:
-    return scores
+    if return_probs:
+      probs = np.exp(scores - np.max(scores, axis=1, keepdims=True))
+      probs /= np.sum(probs, axis=1, keepdims=True)
+      return probs
+    else:
+      return scores
   data_loss, dscores = softmax_loss(scores, y)
   if dropout is None:
     da2, dW3, db3 = affine_backward(dscores, cache4)
