@@ -3,6 +3,7 @@ import numpy as np
 from layers import *
 from fast_layers import *
 from layer_utils import *
+from util import *
 
 from classifiers.convnet import *
 from MultiLevelConvNet import MultiLevelConvNet
