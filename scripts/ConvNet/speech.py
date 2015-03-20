@@ -68,7 +68,7 @@ net.set_level_learning_parameters(1, reg = 0.0000, learning_rate = 0.0015, batch
 net.set_level_learning_parameters(2, reg = 0.0000, learning_rate = 0.0015, batch_size = 250, num_epochs = 5, 
 										learning_rate_decay = 0.999, update = 'rmsprop', verbose=True, dropout=1.0)
 
-if net.check_level_continuity():
-	return "IT WORKED"
+if net.check_level_continuity(X_sig):
+	print "IT WORKED"
 else:
-	return "It didn't work"
+	print "It didn't work"

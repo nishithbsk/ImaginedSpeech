@@ -72,7 +72,7 @@ class MultiLevelConvNet():
 		y_val = np.reshape(y_val, (y_val.size))
 
 		results = self.trainer.train(X_train, y_train, X_val, y_val, model, fn,
-          	reg=self.levels[n]['reg'], learning_rate=self.levels[n]['learning_rate'], batch_size=self.levels[n]['batch_size'] num_epochs=self.levels[n]['num_epochs'],
+          	reg=self.levels[n]['reg'], learning_rate=self.levels[n]['learning_rate'], batch_size=self.levels[n]['batch_size'], num_epochs=self.levels[n]['num_epochs'],
           	learning_rate_decay=self.levels[n]['learning_rate_decay'], update=self.levels[n]['update'], verbose=self.levels[n]['verbose'], dropout=self.levels[n]['dropout'])
 
 		best_model = results[0]
