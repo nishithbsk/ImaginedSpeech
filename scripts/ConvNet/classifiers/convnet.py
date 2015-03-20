@@ -768,7 +768,7 @@ def init_speech_convnet(input_shape=(6, 8, 8), num_classes=64,
   model['b1'] = np.random.randn(F1)
   model['W2'] = np.random.randn(F2, F1, filter_size, filter_size)
   model['b2'] = np.random.randn(F2)
-  model['W3'] = np.random.randn(H * W * F2 / 16, FC)
+  model['W3'] = np.random.randn(H * W * F2 / 4, FC)
   model['b3'] = np.random.randn(FC)
 
   for i in [1, 2, 3]:
@@ -816,7 +816,7 @@ def speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = F
   dropout_param['mode'] = 'test' if y is None else 'train'
 
   a1, cache1 = conv_relu_forward(X, W1, b1, conv_param)
-  a2, cache2 = conv_relu_forward(a1, W2, b2, conv_param)
+  a2, cache2 = conv_relu_pool_forward(a1, W2, b2, conv_param, pool_param)
   if extract_features:
     return a2
 
@@ -834,7 +834,7 @@ def speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = F
   else:
     dd2, dW3, db3 = affine_backward(dscores, cache4)
     da2 = dropout_backward(dd2, cache3)
-  da1, dW2, db2 = conv_relu_backward(da2, cache2)
+  da1, dW2, db2 = conv_relu_pool_backward(da2, cache2)
   dX, dW1, db1 = conv_relu_backward(da1, cache1)
 
   grads = { 'W1': dW1, 'b1': db1, 'W2': dW2, 'b2': db2, 'W3': dW3, 'b3': db3}
