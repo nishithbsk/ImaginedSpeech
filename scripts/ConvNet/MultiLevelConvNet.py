@@ -80,23 +80,35 @@ class MultiLevelConvNet():
 
 		return np.concatenate(tuple(probs), axis=1)
 
-	def train_level(self, n, X_train, X_val, y_train, y_val):
-		X_train = self.process_to_level(n, self.X_train)
-		X_val = self.process_to_level(n, self.X_val)
+	def train_level(self, n, pX_train, pX_val, y_train, y_val):
+		level_X_train = self.process_to_level(n, pX_train)
+		level_X_val = self.process_to_level(n, pX_val)
 
-		model, fn = self.levels[n]['model'], self.levels['fn']
+		model, fn, width, numComponents, stride = self.levels[n]['model'], self.levels[n]['fn'], self.levels[n]['component_dim'][2], self.levels[n]['numComponents'], self.levels[n]['stride']
 
-		dims = self.levels[n]['component_dim']
 
-		X_train = reduce(lambda x, y: np.vstack(x, y), [X_train[:, :dims[0], :dims[1], i : i + dims[2]] for i in range(X_train.shape[3] / dims[2])])
-		X_val = reduce(lambda x, y: np.vstack(x, y), [X_val[:, :dims[0], :dims[1], i : i + dims[2]] for i in range(X_val.shape[3] / dims[2])])
+
+		components_train = np.array_split(level_X_train, level_X_train.shape[3] / width, axis=3)
+		components_val = np.array_split(level_X_val, level_X_val.shape[3] / width, axis=3)
+
+		current = 0
+		X_train_arr = []
+		X_val_arr = []
+		while (current + width <= level_X_train.shape[3]):
+			X_train_arr.append(level_X_train[:, :, :, current : current + width])
+			X_val_arr.append(level_X_val[:, :, :, current : current + width])
+			current += stride
+
+		X_train = np.concatenate(tuple(X_train_arr), axis=0)
+		X_val = np.concatenate(tuple(X_val_arr), axis=0)
 		y_train = np.reshape(y_train, (y_train.size))
 		y_val = np.reshape(y_val, (y_val.size))
 
-		results = self.trainer.train(X_train, y_train, X_val, y_val, model, fn,
-          	reg=self.levels[n]['reg'], learning_rate=self.levels[n]['learning_rate'], batch_size=self.levels[n]['batch_size'], num_epochs=self.levels[n]['num_epochs'],
-          	learning_rate_decay=self.levels[n]['learning_rate_decay'], update=self.levels[n]['update'], verbose=self.levels[n]['verbose'], dropout=self.levels[n]['dropout'])
+		print X_train.shape, X_val.shape, y_train.shape, y_val.shape
 
+		results = self.trainer.train(X_train, y_train, X_val, y_val, model, fn,
+           	reg=self.levels[n]['reg'], learning_rate=self.levels[n]['learning_rate'], batch_size=self.levels[n]['batch_size'], num_epochs=self.levels[n]['num_epochs'],
+           	learning_rate_decay=self.levels[n]['learning_rate_decay'], update=self.levels[n]['update'], verbose=self.levels[n]['verbose'], dropout=self.levels[n]['dropout'])
 		best_model = results[0]
 		self.levels[n]['model'] = best_model
 

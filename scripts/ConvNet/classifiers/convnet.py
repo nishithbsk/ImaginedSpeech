@@ -851,3 +851,117 @@ def speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = F
   loss = data_loss + reg_loss
 
   return loss, grads
+
+def init_small_speech_convnet(input_shape=(6, 8, 8), num_classes=64,
+                            filter_size=3, num_filters=(32, 128),
+                            weight_scale=1e-4, bias_scale=0, dtype=np.float32):
+  """
+  Initialize a three layer ConvNet with the following architecture:
+
+  conv - relu - pool - affine - relu - dropout - affine - softmax
+
+  The convolutional layer uses stride 1 and has padding to perform "same"
+  convolution, and the pooling layer is 2x2 stride 2.
+
+  Inputs:
+  - input_shape: Tuple (C, H, W) giving the shape of each training sample.
+    Default is (3, 32, 32) for CIFAR-10.
+  - num_classes: Number of classes over which classification will be performed.
+    Default is 10 for CIFAR-10.
+  - filter_size: The height and width of filters in the convolutional layer.
+  - num_filters: Tuple (F, H) where F is the number of filters to use in the
+    convolutional layer and H is the number of neurons to use in the hidden
+    affine layer.
+  - weight_scale: Weights are initialized from a gaussian distribution with
+    standard deviation equal to weight_scale.
+  - bias_scale: Biases are initialized from a gaussian distribution with
+    standard deviation equal to bias_scale.
+  - dtype: Numpy datatype used to store parameters. Default is float32 for
+    speed.
+  """
+  C, H, W = input_shape
+  F1, FC = num_filters
+  filter_size = filter_size
+  model = {}
+  model['W1'] = np.random.randn(F1, C, filter_size, filter_size)
+  model['b1'] = np.random.randn(F1)
+  model['W2'] = np.random.randn(H * W * F1 / 4, FC)
+  model['b2'] = np.random.randn(FC)
+
+  for i in [1, 2]:
+    model['W%d' % i] *= weight_scale
+    model['b%d' % i] *= bias_scale
+
+  for k in model:
+    model[k] = model[k].astype(dtype, copy=False)
+
+  return model
+
+def small_speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = False, return_probs = False):
+  """
+  Compute the loss and gradient for a simple three layer ConvNet that uses
+  the following architecture:
+
+  conv - relu - pool - affine - relu - dropout - affine - softmax
+
+  The convolution layer uses stride 1 and sets the padding to achieve "same"
+  convolutions, and the pooling layer is 2x2 stride 2. We use L2 regularization
+  on all weights, and no regularization on the biases.
+
+  Inputs:
+  - X: (N, C, H, W) array of input data
+  - model: Dictionary mapping parameter names to values; it should contain
+    the following parameters:
+    - W1, b1: Weights and biases for convolutional layer
+    - W2, b2, W3, b3: Weights and biases for affine layers
+  - y: Integer array of shape (N,) giving the labels for the training samples
+    in X. This is optional; if it is not given then return classification
+    scores; if it is given then instead return loss and gradients.
+  - reg: The regularization strength.
+  - dropout: The dropout parameter. If this is None then we skip the dropout
+    layer; this allows this function to work even before the dropout layer
+    has been implemented.
+  """
+  W1, b1 = model['W1'], model['b1']
+  W2, b2 = model['W2'], model['b2']
+
+  conv_param = {'stride': 1, 'pad': (W1.shape[2] - 1) / 2}
+  pool_param = {'stride': 2, 'pool_height': 2, 'pool_width': 2}
+  dropout_param = {'p': dropout}
+  dropout_param['mode'] = 'test' if y is None else 'train'
+
+  a1, cache1 = conv_relu_pool_forward(X, W1, b1, conv_param, pool_param)
+  if extract_features:
+    return a1
+
+  if dropout is None:
+    scores, cache3 = affine_forward(a1, W2, b2)
+  else:
+    d1, cache2 = dropout_forward(a1, dropout_param)
+    scores, cache3 = affine_forward(d1, W2, b2)
+
+  if y is None:
+    if return_probs:
+      probs = np.exp(scores - np.max(scores, axis=1, keepdims=True))
+      probs /= np.sum(probs, axis=1, keepdims=True)
+      return probs
+    else:
+      return scores
+  data_loss, dscores = softmax_loss(scores, y)
+  if dropout is None:
+    da1, dW2, db2 = affine_backward(dscores, cache3)
+  else:
+    dd1, dW2, db2 = affine_backward(dscores, cache3)
+    da1 = dropout_backward(dd1, cache2)
+  dX, dW1, db1 = conv_relu_pool_backward(da1, cache1)
+
+  grads = { 'W1': dW1, 'b1': db1, 'W2': dW2, 'b2': db2}
+
+  reg_loss = 0.0
+  for p in ['W1', 'W2']:
+    W = model[p]
+    reg_loss += 0.5 * reg * np.sum(W * W)
+    grads[p] += reg * W
+  loss = data_loss + reg_loss
+
+  return loss, grads
