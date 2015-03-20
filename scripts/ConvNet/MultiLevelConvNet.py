@@ -7,12 +7,12 @@ class MultiLevelConvNet():
 		self.levels = {{}}
 		self.trainer = ClassifierTrainer()
 
-	def set_level_parameters(self, n, fn, model, y_train, y_val, input_dim, numComponents, stride):
+	def set_level_parameters(self, n, fn, model, y_train, y_val, component_dim, numComponents, stride):
 		self.levels[n]['fn'] = fn
 		self.levels[n]['model'] = model
 		self.levels[n]['y_train'] = y_train
 		self.levels[n]['y_val'] = y_val
-		self.levels[n]['input_dim'] = input_dim
+		self.levels[n]['component_dim'] = component_dim
 		self.levels[n]['stride'] = stride
 		self.levels[n]['numComponents'] = numComponents
 
@@ -33,7 +33,7 @@ class MultiLevelConvNet():
 		return True
 
 	def forward_level(self, n, X):
-		component_dims = self.levels[n]['input_dim']
+		component_dims = self.levels[n]['component_dim']
 		stride = self.levels[n]['stride']
 		numComponents = self.levels[n]['numComponents']
 		current = 0

@@ -141,7 +141,7 @@ def init_three_layer_convnet(input_shape=(6, 8, 8), num_classes=64,
   F1, FC = num_filters
   filter_size = filter_size
   model = {}
-  model['W1'] = np.random.randn(F1, 6, filter_size, filter_size)
+  model['W1'] = np.random.randn(F1, input_shape[0], filter_size, filter_size)
   model['b1'] = np.random.randn(F1)
   model['W2'] = np.random.randn(H * W * F1, FC)
   model['b2'] = np.random.randn(FC)
@@ -192,7 +192,7 @@ def three_layer_convnet(X, model, y=None, reg=0.0, dropout=None):
   dropout_param = {'p': dropout}
   dropout_param['mode'] = 'test' if y is None else 'train'
 
-  a1, cache1 = conv_relu_forward(X, W1, b1, conv_param)
+  a1, cache1 = conv_relu_pool_forward(X, W1, b1, conv_param)
   # print a1
   
   a2, cache2 = affine_relu_forward(a1, W2, b2)
@@ -733,9 +733,9 @@ def affine_convnet(X, model, y=None, reg=0.0, dropout=None):
   return loss, grads
 
 
-def init_conv_convnet(input_shape=(6, 8, 8), num_classes=64,
+def init_speech_convnet(input_shape=(6, 8, 8), num_classes=64,
                             filter_size=3, num_filters=(32, 128, 256),
-                            weight_scale=1e-7, bias_scale=0, dtype=np.float32):
+                            weight_scale=1e-4, bias_scale=0, dtype=np.float32):
   """
   Initialize a three layer ConvNet with the following architecture:
 
@@ -764,16 +764,14 @@ def init_conv_convnet(input_shape=(6, 8, 8), num_classes=64,
   F1, F2, FC = num_filters
   filter_size = filter_size
   model = {}
-  model['W1'] = np.random.randn(F1, 6, filter_size, filter_size)
+  model['W1'] = np.random.randn(F1, c, filter_size, filter_size)
   model['b1'] = np.random.randn(F1)
   model['W2'] = np.random.randn(F2, F1, filter_size, filter_size)
   model['b2'] = np.random.randn(F2)
-  model['W3'] = np.random.randn(H * W * F2, FC)
+  model['W3'] = np.random.randn(H * W * F2 / 16, FC)
   model['b3'] = np.random.randn(FC)
-  model['W4'] = np.random.randn(FC, num_classes)
-  model['b4'] = np.random.randn(num_classes)
 
-  for i in [1, 2, 3, 4]:
+  for i in [1, 2, 3]:
     model['W%d' % i] *= weight_scale
     model['b%d' % i] *= bias_scale
 
@@ -782,7 +780,7 @@ def init_conv_convnet(input_shape=(6, 8, 8), num_classes=64,
 
   return model
 
-def conv_convnet(X, model, y=None, reg=0.0, dropout=None):
+def speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = False):
   """
   Compute the loss and gradient for a simple three layer ConvNet that uses
   the following architecture:
@@ -819,29 +817,30 @@ def conv_convnet(X, model, y=None, reg=0.0, dropout=None):
 
   a1, cache1 = conv_relu_forward(X, W1, b1, conv_param)
   a2, cache2 = conv_relu_forward(a1, W2, b2, conv_param)
-  a3, cache3 = affine_relu_forward(a2, W3, b3)
+  if extract_features:
+    return a2
+
   if dropout is None:
-    scores, cache5 = affine_forward(a3, W4, b4)
+    scores, cache4 = affine_forward(a2, W3, b3)
   else:
-    d2, cache4 = dropout_forward(a3, dropout_param)
-    scores, cache5 = affine_forward(d2, W4, b4)
+    d2, cache3 = dropout_forward(a2, dropout_param)
+    scores, cache4 = affine_forward(d2, W3, b3)
 
   if y is None:
     return scores
   data_loss, dscores = softmax_loss(scores, y)
   if dropout is None:
-    da3, dW4, db4 = affine_backward(dscores, cache5)
+    da2, dW3, db3 = affine_backward(dscores, cache4)
   else:
-    dd2, dW4, db4 = affine_backward(dscores, cache5)
-    da3 = dropout_backward(dd2, cache4)
-  da2, dW3, db3 = affine_relu_backward(da3, cache3)
+    dd2, dW3, db3 = affine_backward(dscores, cache4)
+    da2 = dropout_backward(dd2, cache3)
   da1, dW2, db2 = conv_relu_backward(da2, cache2)
   dX, dW1, db1 = conv_relu_backward(da1, cache1)
 
-  grads = { 'W1': dW1, 'b1': db1, 'W2': dW2, 'b2': db2, 'W3': dW3, 'b3': db3, 'W4': dW4, 'b4': db4}
+  grads = { 'W1': dW1, 'b1': db1, 'W2': dW2, 'b2': db2, 'W3': dW3, 'b3': db3}
 
   reg_loss = 0.0
-  for p in ['W1', 'W2', 'W3', 'W4']:
+  for p in ['W1', 'W2', 'W3']:
     W = model[p]
     reg_loss += 0.5 * reg * np.sum(W * W)
     grads[p] += reg * W
