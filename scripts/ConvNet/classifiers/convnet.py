@@ -764,7 +764,7 @@ def init_speech_convnet(input_shape=(6, 8, 8), num_classes=64,
   F1, F2, FC = num_filters
   filter_size = filter_size
   model = {}
-  model['W1'] = np.random.randn(F1, c, filter_size, filter_size)
+  model['W1'] = np.random.randn(F1, C, filter_size, filter_size)
   model['b1'] = np.random.randn(F1)
   model['W2'] = np.random.randn(F2, F1, filter_size, filter_size)
   model['b2'] = np.random.randn(F2)
@@ -808,7 +808,6 @@ def speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = F
   W1, b1 = model['W1'], model['b1']
   W2, b2 = model['W2'], model['b2']
   W3, b3 = model['W3'], model['b3']
-  W4, b4 = model['W4'], model['b4']
 
   conv_param = {'stride': 1, 'pad': (W1.shape[2] - 1) / 2}
   pool_param = {'stride': 2, 'pool_height': 2, 'pool_width': 2}

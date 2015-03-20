@@ -1,11 +1,14 @@
+from classifier_trainer import ClassifierTrainer
+import numpy as np
+
 class MultiLevelConvNet():
 
 	def __init__(self, numLevels):
 		self.numLevels = numLevels
-		self.levels = {{}}
+		self.levels = [{} for _ in range(numLevels)]
 		self.trainer = ClassifierTrainer()
 
-	def set_level_parameters(self, n, fn, model, y_train, y_val, component_dim, numComponents, stride):
+	def set_level_parameters(self, n, fn, model, component_dim, numComponents, stride):
 		self.levels[n]['fn'] = fn
 		self.levels[n]['model'] = model
 		self.levels[n]['component_dim'] = component_dim
@@ -35,20 +38,22 @@ class MultiLevelConvNet():
 		current = 0
 		nextLevel = []
 
-		while (current + component_dims[2] + stride*(numComponents-1) < X.shape[3]):
-			components = []
-			for i in range(numComponents):
-				component = X[:, :component_dims[0], :component_dims[1], current : current + component_dims[2]]
-				components.append(component)
-				current += stride
-			A = self.levels[n]['fn'](reduce(lambda x, y: np.hstack(x, y), components), extract_features = True)
+		width = component_dims[2]
+		counter = 0
+		while (current + width <= X.shape[3]):
+			component = X[:, :component_dims[0], :component_dims[1], current : current + component_dims[2]]
+			A = self.levels[n]['fn'](component, self.levels[n]['model'], extract_features = True)
 			nextLevel.append(A)
+			current += stride
+			counter += 1
 
-		return reduce(lambda x, y: np.hstack(x, y), components)
+		print "Number of components in level %d is %d" % (n, counter)
+
+		return np.concatenate(tuple(nextLevel), axis=3)
 
 
 	def process_to_level(self, n, X):
-		for i in range(n-1):
+		for i in range(n):
 			X = self.forward_level(i, X)
 		return X
 
@@ -56,7 +61,24 @@ class MultiLevelConvNet():
 	def predict_level(self, n, X):
 		A = self.process_to_level(n, X)
 
-		return self.levels[n]['fn'](A, return_probs = True)
+		component_dims = self.levels[n]['component_dim']
+
+
+		probs = []
+		width = component_dims[2]
+		current = 0
+		stride = self.levels[n]['stride']
+		counter = 0
+		while (current + width <= A.shape[3]):
+			component = A[:, :component_dims[0], :component_dims[1], current : current + width]
+			p = self.levels[n]['fn'](component, self.levels[n]['model'], return_probs = True)
+			probs.append(p)
+			current += stride
+			counter +=1 
+
+		print "Number of components in level %d is %d" % (n, counter)
+
+		return np.concatenate(tuple(probs), axis=1)
 
 	def train_level(self, n, X_train, X_val, y_train, y_val):
 		X_train = self.process_to_level(n, self.X_train)
