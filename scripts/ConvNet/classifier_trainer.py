@@ -6,6 +6,9 @@ class ClassifierTrainer(object):
   def __init__(self):
     self.step_cache = {} # for storing velocities in momentum update
 
+  def re_init(self):
+    self.step_cache = {}
+
   def train(self, X, y, X_val, y_val, 
             model, loss_function, 
             reg=0.0, dropout=1.0,
@@ -161,8 +164,6 @@ class ClassifierTrainer(object):
         # if predict_fn is not None:
         #     X_val_subset = predict_fn(X_val)
         scores = loss_function(X_val, model)
-        print np.argmax(scores, axis=1)
-        print scores
         val_acc = np.mean(np.argmax(scores, axis=1) == y_val)
         val_acc_history.append(val_acc)
 

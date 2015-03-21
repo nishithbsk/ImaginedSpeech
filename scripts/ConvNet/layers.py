@@ -202,8 +202,13 @@ def softmax_loss(x, y):
   - loss: Scalar giving the loss
   - dx: Gradient of the loss with respect to x
   """
+  #print "X", x
+  #print "Mean X", x + np.mean(x, axis=1, keepdims=True)
+  #print x
+  #probs = np.exp(x + np.mean(x, axis=1, keepdims=True))
   probs = np.exp(x - np.max(x, axis=1, keepdims=True))
   probs /= np.sum(probs, axis=1, keepdims=True)
+  # print probs
   N = x.shape[0]
   loss = -np.sum(np.log(probs[np.arange(N), y])) / N
   dx = probs.copy()

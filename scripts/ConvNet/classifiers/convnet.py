@@ -947,7 +947,9 @@ def small_speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_featur
       return probs
     else:
       return scores
+  # print scores, y
   data_loss, dscores = softmax_loss(scores, y)
+  # print dscores, data_loss
   if dropout is None:
     da1, dW2, db2 = affine_backward(dscores, cache3)
   else:

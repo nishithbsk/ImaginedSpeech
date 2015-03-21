@@ -47,7 +47,7 @@ class MultiLevelConvNet():
 			current += stride
 			counter += 1
 
-		print "Number of components in level %d is %d" % (n, counter)
+		#print "Number of components in level %d is %d" % (n, counter)
 
 		return np.concatenate(tuple(nextLevel), axis=3)
 
@@ -76,7 +76,7 @@ class MultiLevelConvNet():
 			current += stride
 			counter +=1 
 
-		print "Number of components in level %d is %d" % (n, counter)
+		#print "Number of components in level %d is %d" % (n, counter)
 
 		return np.concatenate(tuple(probs), axis=1)
 
@@ -104,13 +104,15 @@ class MultiLevelConvNet():
 		y_train = np.reshape(y_train, (y_train.size))
 		y_val = np.reshape(y_val, (y_val.size))
 
-		print X_train.shape, X_val.shape, y_train.shape, y_val.shape
-
+		print "Training level", n
+		print "Training Sizes:", X_train.shape, y_train.shape, X_val.shape, y_val.shape
+		self.trainer.re_init()
 		results = self.trainer.train(X_train, y_train, X_val, y_val, model, fn,
            	reg=self.levels[n]['reg'], learning_rate=self.levels[n]['learning_rate'], batch_size=self.levels[n]['batch_size'], num_epochs=self.levels[n]['num_epochs'],
            	learning_rate_decay=self.levels[n]['learning_rate_decay'], update=self.levels[n]['update'], verbose=self.levels[n]['verbose'], dropout=self.levels[n]['dropout'])
 		best_model = results[0]
 		self.levels[n]['model'] = best_model
+		print ""
 
 
 
