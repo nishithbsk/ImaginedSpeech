@@ -114,5 +114,7 @@ class MultiLevelConvNet():
 		self.levels[n]['model'] = best_model
 		print ""
 
+		return results
+
 
 

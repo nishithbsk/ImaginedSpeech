@@ -734,7 +734,7 @@ def affine_convnet(X, model, y=None, reg=0.0, dropout=None):
 
 
 def init_speech_convnet(input_shape=(6, 8, 8), num_classes=64,
-                            filter_size=3, num_filters=(32, 128, 256),
+                            filter_size=3, num_filters=(32, 128),
                             weight_scale=1e-4, bias_scale=0, dtype=np.float32):
   """
   Initialize a three layer ConvNet with the following architecture:
@@ -761,7 +761,8 @@ def init_speech_convnet(input_shape=(6, 8, 8), num_classes=64,
     speed.
   """
   C, H, W = input_shape
-  F1, F2, FC = num_filters
+  F1, F2 = num_filters
+  FC = num_classes
   filter_size = filter_size
   model = {}
   model['W1'] = np.random.randn(F1, C, filter_size, filter_size)
@@ -832,7 +833,7 @@ def speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = F
       return probs
     else:
       return scores
-  data_loss, dscores = softmax_loss(scores, y)
+  data_loss, dscores = svm_loss(scores, y)
   if dropout is None:
     da2, dW3, db3 = affine_backward(dscores, cache4)
   else:
@@ -853,7 +854,7 @@ def speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_features = F
   return loss, grads
 
 def init_small_speech_convnet(input_shape=(6, 8, 8), num_classes=64,
-                            filter_size=3, num_filters=(32, 128),
+                            filter_size=3, num_filters=(32),
                             weight_scale=1e-4, bias_scale=0, dtype=np.float32):
   """
   Initialize a three layer ConvNet with the following architecture:
@@ -880,7 +881,8 @@ def init_small_speech_convnet(input_shape=(6, 8, 8), num_classes=64,
     speed.
   """
   C, H, W = input_shape
-  F1, FC = num_filters
+  F1 = num_filters
+  FC = num_classes
   filter_size = filter_size
   model = {}
   model['W1'] = np.random.randn(F1, C, filter_size, filter_size)
@@ -948,7 +950,7 @@ def small_speech_convnet(X, model, y=None, reg=0.0, dropout=None, extract_featur
     else:
       return scores
   # print scores, y
-  data_loss, dscores = softmax_loss(scores, y)
+  data_loss, dscores = svm_loss(scores, y)
   # print dscores, data_loss
   if dropout is None:
     da1, dW2, db2 = affine_backward(dscores, cache3)

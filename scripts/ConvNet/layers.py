@@ -206,8 +206,10 @@ def softmax_loss(x, y):
   #print "Mean X", x + np.mean(x, axis=1, keepdims=True)
   #print x
   #probs = np.exp(x + np.mean(x, axis=1, keepdims=True))
+  print "Scores:", x
   probs = np.exp(x - np.max(x, axis=1, keepdims=True))
   probs /= np.sum(probs, axis=1, keepdims=True)
+  print "Probs:", probs
   # print probs
   N = x.shape[0]
   loss = -np.sum(np.log(probs[np.arange(N), y])) / N

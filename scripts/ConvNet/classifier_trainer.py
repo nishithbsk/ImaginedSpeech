@@ -164,6 +164,7 @@ class ClassifierTrainer(object):
         # if predict_fn is not None:
         #     X_val_subset = predict_fn(X_val)
         scores = loss_function(X_val, model)
+        print "Predicted classifications:", np.argmax(scores, axis=1)
         val_acc = np.mean(np.argmax(scores, axis=1) == y_val)
         val_acc_history.append(val_acc)
 
